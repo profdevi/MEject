@@ -17,36 +17,33 @@
 
 */
 
-//v1.4 copyright Comine.com 20170327M1019
-#ifndef MFileSearch_h
-#define MFileSearch_h
+//v1.5 copyright Comine.com 20170330R0709
+#ifndef MDriveInfo_h
+#define MDriveInfo_h
 
-///////////////////////////////////////////
-#include "MStringList.h"
+#include <windows.h>
 #include "MString.h"
 
 //******************************************************
-//**  MFileSearch class
+//**  MDriveInfo class
 //******************************************************
-class MFileSearch
+class MDriveInfo
 	{
 	////////////////////////////////////////////////
-	MStringList mDirList;
-	
-	////////////////////////////////////////////////
-	void ClearObject(void);
-	
-	////////////////////////////////////////////////
 	public:
-	MFileSearch(bool create=false);
-	~MFileSearch(void);
+	MDriveInfo(bool create=false);
+	~MDriveInfo(void);
 	bool Create(void);
 	bool Destroy(void);
-	bool AddSearchDir(const char *directory);				// Add Search directory
-	bool AddSearchEnvVar(const char *directory="PATH");		// Search Environment table
-	bool Search(const char *file,MString &fullpath);
-	bool Search(const char *file,MStringList &pathlist);
+	bool IsInitialized(void);
+	bool IsValid(void);
+	bool GetDriveLetters(MString &driveletters);
+	bool IsDriveLetter(char ch);
+	int GetDriveType(char ch);	//=DRIVE_UNKNOWN,DRIVE_NO_ROOT_DIR
+								//=DRIVE_REMOVABLE,DRIVE_FIXED
+								//=DRIVE_REMOTE,DRIVE_CDROM,DRIVE_RAMDISK
+	const char *GetDriveTypeStr(char ch);	// Display string of drive
 	};
 
-#endif // MFileSearch_h
+#endif // MDriveInfo_h
 

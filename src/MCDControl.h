@@ -17,18 +17,14 @@
 
 */
 
-//v1.4 copyright Comine.com 20170327M1009
-#ifndef MProcEnvironTable_h
-#define MProcEnvironTable_h
-
-////////////////////////////////////////////////////
-#include "MStdLib.h"
-#include "MString.h"
+//v1.1 copyright Comine.com 20170331F1106
+#ifndef MCDControl_h
+#define MCDControl_h
 
 //******************************************************
-//**  MProcEnvironTable class
+//**  MCDControl class
 //******************************************************
-class MProcEnvironTable
+class MCDControl
 	{
 	////////////////////////////////////////////////
 	
@@ -37,16 +33,17 @@ class MProcEnvironTable
 	
 	////////////////////////////////////////////////
 	public:
-	MProcEnvironTable(void);
-	~MProcEnvironTable(void);
+	MCDControl(bool create=false);
+	~MCDControl(void);
 	bool Create(void);
 	bool Destroy(void);
-	bool Delete(const char *variable);						// Delete an env var.
-	bool Set(const char *variable,const char *value);		// Add/or update envtable
-	bool Get(const char *variable,MString &value);			// Get an existing envvalue
-	bool Exists(const char *variable);						// Check if variable exists
-	bool Expand(const char *input,MString &output);			// Expand the %VAR%
+	bool DriveEject(char deviceletter);								// Eject tray for drive
+	bool DriveClose(char deviceletter);								// Close tray for drive
+	bool DriveEject(void);											// Eject the first CD Drive
+	bool DriveClose(void);											// Close the first CD Drive	
+	bool DriveEjectAll(void);										// Eject all the drives
+	bool DriveCloseAll(void);										// Close all the drives
 	};
 
-#endif // MProcEnvironTable_h
+#endif // MCDControl_h
 

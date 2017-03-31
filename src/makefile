@@ -1,8 +1,8 @@
-#v1.1 copyright Comine.com 20170327M1034
+#v1.0 copyright Comine.com 20170331F1116
 # Simple Make file for nmake
 #  -Revised to exclude extra search libraries
 
-OUTPUT=MWhich.exe
+OUTPUT=MEject.exe
 LIBS=
 CC=cl.exe
 CLINKER=link.exe
@@ -57,5 +57,4 @@ cleanall:
 	-rm -f *.tli
 	-rm -f *.tlh
 	-rm -f $(OUTPUT)
-
 

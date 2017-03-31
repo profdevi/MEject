@@ -17,127 +17,159 @@
 
 */
 
-//v2.3 copyright Comine.com 20170328T1307
+//v1.1 copyright Comine.com 20170331F1106
 #include "MStdLib.h"
 #include "MCommandArg.h"
-#include "MString.h"
-#include "MStringList.h"
-#include "MFileSearch.h"
+#include "MCDControl.h"
 #include "MLicenseGPL.h"
 
 
 //******************************************************
 //* Module Elements
 //******************************************************
-static const char *GApplicationName="MWhich";	// Used in Help
-static const char *GApplicationVersion="2.3";	// Used in Help
+static const char *GApplicationName="MEject";	// Used in Help
+static const char *GApplicationVersion="1.1";	// Used in Help
 
 ////////////////////////////////////////////////////
 static void GDisplayHelp(void);
-static bool GSearchFileInEnvVar(const char *filename,const char *envar);
 
 ////////////////////////////////////////////////////
 int main(int argn,const char *argv[])
 	{
 	MCommandArg args(argn,argv);
 
-	///////////////////////////////////////////////
-	if(args.GetArgCount()<2)
+	if(args.CheckRemoveArg("-gpl")==true)
+		{
+		MLicenseGPL lic(true);
+		lic.Print();
+		return 0;
+		}
+
+	if(args.CheckRemoveHelp()==true)
 		{
 		GDisplayHelp();
 		return 0;
 		}
 
-	/////////////////////////////////////////////
-	if(args.CheckRemoveArg("-gpl")==true)
+	// Check for open or close
+	bool flagopendrive=true;
+	if(args.CheckRemoveArg("-c")==true || args.CheckRemoveArg("-t")==true)
 		{
-		MLicenseGPL license(true);
-		license.Print();
+		flagopendrive=false;
+		}
+
+	// Check for all drives
+	bool flagalldrives=false;
+	if(args.CheckRemoveArg("-a")==true)
+		{
+		flagalldrives=true;
+		}
+
+	MCDControl cdcontrol(true);
+	// Open All the drives
+	if(flagalldrives==true && flagopendrive==true)
+		{
+		MStdPrintf("Ejecting All Drives...");
+		cdcontrol.DriveEjectAll();
+		MStdPrintf("Done\n");
 		return 0;
 		}
 
-	MString envvar;
-	if(envvar.Create("PATH")==false)
+	// close all the drives
+	if(flagalldrives==true && flagopendrive==false)
 		{
-		MStdPrintf("**String allocation error\n");
-		return 1;
+		MStdPrintf("Closing All Drives...");
+		cdcontrol.DriveCloseAll();
+		MStdPrintf("Done\n");
+		return 0;		
 		}
 
-	const char *tmpvar;
-	int index;
-	if(args.GetNameValue("-var=",tmpvar,index)==true)
+	// Open the first drive
+	if(flagopendrive==true && args.GetArgCount()==1)
 		{
-		if(envvar.Create(tmpvar)==false)
+		MStdPrintf("Opening First Drive...");
+		if(cdcontrol.DriveEject()==false)
 			{
-			MStdPrintf("**String allocation error\n");
+			MStdPrintf("FAILED\n");
 			return 1;
 			}
 
-		args.RemoveArg(index);
+		MStdPrintf("Done\n");
+		return 0;				
 		}
 
-	// If path do search current
-	int i;
-	for(i=1;i<args.GetArgCount();++i)
+	// Close the first drive
+	if(flagopendrive==false && args.GetArgCount()==1)
 		{
-		GSearchFileInEnvVar(args.GetArg(i),envvar.Get() );
+		MStdPrintf("Closing First Drive...");
+		if(cdcontrol.DriveClose()==false)
+			{
+			MStdPrintf("FAILED\n");
+			return 1;
+			}
+
+		MStdPrintf("Done\n");
+		return 0;				
 		}
 
+	// Process passed drive letters
+	if(flagopendrive==true)
+		{
+		int i;
+		for(i=1;i<args.GetArgCount();++i)
+			{
+			char driveletter=MStdToUpper(args.GetArg(i)[0]);
+			MStdPrintf("Opening Drive %c: ... ",driveletter );
+			if(cdcontrol.DriveEject(driveletter)==false)
+				{
+				MStdPrintf("FAILED\n");
+				continue;
+				}
+
+			MStdPrintf("Done\n");
+			}
+
+		return 0;
+		}
+
+	// Close passed drive list
+	if(flagopendrive==true)
+		{
+		int i;
+		for(i=1;i<args.GetArgCount();++i)
+			{
+			char driveletter=MStdToUpper(args.GetArg(i)[0]);
+			MStdPrintf("Closing Drive %c: ... ",driveletter );
+			if(cdcontrol.DriveEject(driveletter)==false)
+				{
+				MStdPrintf("FAILED\n");
+				continue;
+				}
+
+			MStdPrintf("Done\n");
+			}
+
+		return 0;
+		}
+	
 	return 0;
 	}
 
 
-//////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////
 static void GDisplayHelp(void)
 	{
 	MStdPrintf(	"\n"
-				"  usage:  %s [-var=<ENV VARIABLE>] <FILENAME>+ [-?|-gpl]\n"
-				"              v%s copyright Comine.com\n"
-				"              use -gpl to display GPL license\n"
+				"   usage:  %s [-c] [-a] [<driveletter>+] [-?|-gpl]\n"
+				"           v%s copyright Comine.com\n"
+				"           use -gpl to display GPL license\n"
 				"\n"
-				"  Program will search for a filename in the environment var search path\n"
+				"   Program ejects or closes the CD/DVD drive tray\n"
 				"\n"
-				"     Arguments:\n"
-				"        -var : Select another environment variable for search \n"
-				"\n",GApplicationName,GApplicationVersion);
-	}
-
-
-//////////////////////////////////////////////////////////////////
-static bool GSearchFileInEnvVar(const char *filename,const char *envar)
-	{
-	MFileSearch filesearch;
-	if(filesearch.Create()==false)
-		{
-		return false;
-		}
-
-	if(filesearch.AddSearchEnvVar(envar)==false )
-		{
-		return false;
-		}
-
-	if(MStdStrCmp(envar,"PATH")==0)
-		{
-		filesearch.AddSearchDir(".");
-		}
-
-	MStringList strlist;
-	if(filesearch.Search(filename,strlist)==false)
-		{
-		return false;
-		}
-
-	strlist.ReadReset();
-	const char *str;
-	while((str=strlist.ReadString())!=NULL)
-		{
-		MStdPrintf("%s\n",str);
-		}
-
-	filesearch.Destroy();
-
-	return true;
+				"        -a      : All CD/DVD Drives \n"
+				"        -c,-t   : Close the drive tray\n"
+				"\n"
+				,GApplicationName,GApplicationVersion);
 	}
 
 
